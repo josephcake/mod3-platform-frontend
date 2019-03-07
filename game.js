@@ -26,6 +26,8 @@ var gameOver = false;
 var scoreText;
 var rupee = new Audio();
 rupee.src = "http://noproblo.dayjo.org/ZeldaSounds/LOZ/LOZ_Get_Rupee.wav"
+var theme;
+// theme.src = "sounds/theme.mp3"
 var game = new Phaser.Game(config);
 let currStar = "star1"
 let arrow;
@@ -33,6 +35,7 @@ let arrow;
 
 function preload ()
 {
+    this.load.audio("theme", "sounds/theme.mp3")
     this.load.image('background', 'assets/sceneImages2/background.png');
     this.load.image('ground', 'assets/sceneImages2/platform.png');
     this.load.image('wall', 'assets/verticalPlatform.png');
@@ -51,27 +54,22 @@ function preload ()
 function create ()
 {
     //  A simple background for our game
+    // theme = this.add.audio("theme");
+    // theme.play();
+    this.sound.play('theme')
     this.add.image(400, 300, 'background').setScale(1.7)
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = this.physics.add.staticGroup();
     platforms.create(100, 588, 'groundPlatform').setScale(1.5).refreshBody();
-
-    //  Now let's create some ledges
-    // platforms.create(380, 400, 'ground');
-    // platforms.create(200, 250, 'ground');
-    // platforms.create(750, 220, 'ground');
-    // platforms.create(600, 170, 'ground');
-    // platforms.create(200, 470, 'ground');
-    // platforms.create(250, 473, 'wall');
     platformCreation()
     // The player and its settings
     player = this.physics.add.sprite(100, 450, 'dude');
     //  Player physics properties. Give the little guy a slight bounce.
-    // player.setBounce(0.2);
     player.setSize(22, 22, 24, 34);
     player.setCollideWorldBounds(true);
     player.body.collideWorldBounds = true;
+    bombs = this.physics.add.group();
     //  Our player animations, turning, walking left and walking right.
     this.anims.create({
         key: 'left',
@@ -92,7 +90,7 @@ function create ()
     });
 
 
-    
+
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
     let randNum=Math.floor(Math.random()*10)+6
@@ -106,18 +104,18 @@ function create ()
         setXY: { x: Math.floor(Math.random()*400)+100, y: 0, stepX: 65, stepY: randY }
     });
     stars.children.iterate(function (child) {
-        //  Give each star0 a slightly different bounce
         child.setBounceY(Phaser.Math.FloatBetween(0.6, 0.4));
     });
 
-    bombs = this.physics.add.group();
     //  The score
     scoreText = this.add.text(16, 16, 'score: 0', { font: '40px VT323', fill: 'white' });
     //  Collide the player and the rupees with the platforms
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(stars, platforms);
     this.physics.add.collider(bombs, platforms);
+    this.physics.add.collider(bombs, bombs);
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
+    // this.physics.add.overlap(bombs, platforms, killBombs, null, this);
     this.physics.add.overlap(player, stars, collectStar, null, this);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
 }
@@ -126,7 +124,10 @@ function create ()
 let currXValue = 130
 let currYValue = 520
 let platformAlgo = 1
-
+// function killBombs(bomb){
+//
+//   bomb.destroy()
+// }
 function platformCreation() {
   // let randPlatformX=Math.floor(Math.random()*800)-30 //*1000 = 100px
   // let randPlatformY=Math.floor(Math.random()*150)+330 //*1000 = 100px
@@ -223,16 +224,19 @@ function collectStar (player, star0)
         if (count % 3 === 0){
           bomb.setScale(4);
           bomb.setTexture("bomb2");
+          bomb.setCollideWorldBounds(false);
+          bomb.setVelocity(Phaser.Math.Between(-300, 300), 700);
           bomb.setCircle(12)
         } else {
           bomb.setScale(1);
           bomb.setCircle(6);
+          bomb.setCollideWorldBounds(true);
+          bomb.setVelocity(Phaser.Math.Between(-300, 300), 100);
         }
         bomb.setRotation(.7);
         // bomb.enableBody();
         // bomb.setTint(0xff0000)
-        bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Phaser.Math.Between(-300, 300), 200);
+        // bomb.destroy();
         bomb.allowGravity = false;
         platformCreation();
 
@@ -241,6 +245,7 @@ function collectStar (player, star0)
 
 function hitBomb (player, bomb)
 {
+
     this.physics.pause();
     console.log(score)
     const name=prompt('Name: ')
@@ -248,9 +253,23 @@ function hitBomb (player, bomb)
     player.setTint(0xff0000);
     player.anims.play('turn');
     gameOver = true;
+    game.sound.stopAll();
 
 }
 
 function render() {
     // weapon.debug();
 }
+
+
+//Bubbles
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
+//==================//===================//====================
