@@ -28,39 +28,34 @@ var rupee = new Audio();
 rupee.src = "http://noproblo.dayjo.org/ZeldaSounds/LOZ/LOZ_Get_Rupee.wav"
 var game = new Phaser.Game(config);
 let currStar = "star1"
-
-
-
+let arrow;
 
 
 function preload ()
 {
-    this.load.image('background', 'assets/background.png');
-    this.load.image('ground', 'assets/platform.png');
+    this.load.image('background', 'assets/sceneImages2/background.png');
+    this.load.image('ground', 'assets/sceneImages2/platform.png');
     this.load.image('wall', 'assets/verticalPlatform.png');
-    this.load.image('groundPlatform', 'assets/ground.png');
+    this.load.image('groundPlatform', 'assets/sceneImages2/newGround.png');
     this.load.image('star1', 'assets/rupee1.png');
     this.load.image('star2', 'assets/rupee2.png');
     this.load.image('star3', 'assets/rupee3.png');
     this.load.image('star4', 'assets/rupee4.png');
     this.load.image('star5', 'assets/rupee5.png');
     this.load.image('star6', 'assets/rupee6.png');
-    this.load.image('bomb', 'assets/bomb.png');
+    this.load.image('bomb', 'assets/sceneImages2/bomb.png');
+    this.load.image('bomb2', 'assets/sceneImages2/bomb2.png');
     this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 42, frameHeight: 45 });
 }
 
 function create ()
 {
     //  A simple background for our game
-    this.add.image(400, 300, 'background').setScale(1.8).setTint(0xffff4d);
-
+    this.add.image(400, 300, 'background').setScale(1.7)
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = this.physics.add.staticGroup();
-
-    //  Here we create the ground.
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    platforms.create(100, 588, 'groundPlatform').setScale(2).refreshBody();
+    platforms.create(100, 588, 'groundPlatform').setScale(1.5).refreshBody();
 
     //  Now let's create some ledges
     // platforms.create(380, 400, 'ground');
@@ -70,18 +65,13 @@ function create ()
     // platforms.create(200, 470, 'ground');
     // platforms.create(250, 473, 'wall');
     platformCreation()
-
-
-
-
-
     // The player and its settings
     player = this.physics.add.sprite(100, 450, 'dude');
     //  Player physics properties. Give the little guy a slight bounce.
-    player.setBounce(0.2);
+    // player.setBounce(0.2);
     player.setSize(22, 22, 24, 34);
     player.setCollideWorldBounds(true);
-
+    player.body.collideWorldBounds = true;
     //  Our player animations, turning, walking left and walking right.
     this.anims.create({
         key: 'left',
@@ -89,13 +79,11 @@ function create ()
         frameRate: 10,
         repeat: -1
     });
-
     this.anims.create({
         key: 'turn',
         frames: [ { key: 'dude', frame: 5 } ],
         frameRate: 20
     });
-
     this.anims.create({
         key: 'right',
         frames: this.anims.generateFrameNumbers('dude', { start: 6, end: 8 }),
@@ -103,6 +91,8 @@ function create ()
         repeat: -1
     });
 
+
+    
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
     let randNum=Math.floor(Math.random()*10)+6
@@ -110,33 +100,25 @@ function create ()
     let randY=Math.floor(Math.random()*-70)+30
     // let randSpace=Math.floor(Math.random()*100)+30
     //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
-
     stars = this.physics.add.group({
         key: currStar,
-        repeat: 9,
+        repeat: 0,
         setXY: { x: Math.floor(Math.random()*400)+100, y: 0, stepX: 65, stepY: randY }
     });
-
     stars.children.iterate(function (child) {
         //  Give each star0 a slightly different bounce
         child.setBounceY(Phaser.Math.FloatBetween(0.6, 0.4));
-
     });
 
     bombs = this.physics.add.group();
-
     //  The score
     scoreText = this.add.text(16, 16, 'score: 0', { font: '40px VT323', fill: 'white' });
-
-    //  Collide the player and the stars with the platforms
+    //  Collide the player and the rupees with the platforms
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(stars, platforms);
     this.physics.add.collider(bombs, platforms);
-
-
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     this.physics.add.overlap(player, stars, collectStar, null, this);
-
     this.physics.add.collider(player, bombs, hitBomb, null, this);
 }
 
@@ -170,7 +152,8 @@ function update ()
 {
     if (gameOver)
     {
-        return;
+        gameOver=false;
+        this.scene.restart()
     }
 
     if (cursors.left.isDown)
@@ -196,6 +179,10 @@ function update ()
     {
         player.setVelocityY(-600);
     }
+    // if (fireButton.isDown)
+    //  {
+    //      fireBullet();
+    //  }
 }
 
 let initScore = 10
@@ -212,7 +199,6 @@ function collectStar (player, star0)
 
 
     if (stars.countActive(true) === 0)
-
     {
         //  A new batch of stars to collect
         // stars.loadTexture("star2", 0);
@@ -234,11 +220,19 @@ function collectStar (player, star0)
 
         var bomb = bombs.create(x, 1, 'bomb');
         bomb.setBounce(1);
+        if (count % 3 === 0){
+          bomb.setScale(4);
+          bomb.setTexture("bomb2");
+          bomb.setCircle(12)
+        } else {
+          bomb.setScale(1);
+          bomb.setCircle(6);
+        }
+        bomb.setRotation(.7);
         // bomb.enableBody();
-        bomb.setCircle(6);
-        bomb.setTint(0xff0000)
+        // bomb.setTint(0xff0000)
         bomb.setCollideWorldBounds(true);
-        bomb.setVelocity(Phaser.Math.Between(-30, 30), 200);
+        bomb.setVelocity(Phaser.Math.Between(-300, 300), 200);
         bomb.allowGravity = false;
         platformCreation();
 
@@ -251,13 +245,12 @@ function hitBomb (player, bomb)
     console.log(score)
     const name=prompt('Name: ')
     console.log(name)
-
-
     player.setTint(0xff0000);
-
     player.anims.play('turn');
+    gameOver = true;
 
-    // gameOver = true;
+}
 
-    this.scene.restart()
+function render() {
+    // weapon.debug();
 }
